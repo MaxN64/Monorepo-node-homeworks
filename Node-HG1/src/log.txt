@@ -1,0 +1,8 @@
+2025-07-23T09:45:48.183Z - Server gestartet
+2025-07-23T09:45:48.185Z - Datenbankverbindung hergestellt
+2025-07-23T09:45:48.185Z - Fehler: Ungültige Nutzereingabe
+2025-07-23T09:45:48.185Z - Neue Anfrage erhalten: GET /api/users
+2025-07-23T09:48:53.124Z - Server started
+2025-07-23T09:48:53.125Z - Database connection established
+2025-07-23T09:48:53.125Z - New request received: GET /api/users
+2025-07-23T09:48:53.125Z - Error: Invalid user input
