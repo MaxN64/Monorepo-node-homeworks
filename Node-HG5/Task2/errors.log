@@ -1,0 +1,6 @@
+2025-08-02T14:09:38.992Z Error: Test error
+    at Server.<anonymous> (file:///C:/Users/lined/Desktop/Webentwikler/Node/Node-Hausaufgabe/Node-HG5/Task2/server.js:17:15)
+    at Server.emit (node:events:518:28)
+    at parserOnIncoming (node:_http_server:1137:12)
+    at HTTPParser.parserOnHeadersComplete (node:_http_common:119:17)
+
