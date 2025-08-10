@@ -1,0 +1,52 @@
+### Health
+GET http://localhost:3000/health
+
+### Ping router
+GET http://localhost:3000/_routes_ping
+
+### Регистрация нового пользователя
+POST http://localhost:3000/register
+Content-Type: application/json
+
+{
+  "email": "user10@example.com",
+  "password": "Pa$$w0rd!"
+}
+
+### Повторная регистрация (ожидаем 409)
+POST http://localhost:3000/register
+Content-Type: application/json
+
+{
+  "email": "user10@example.com",
+  "password": "Pa$$w0rd!"
+}
+
+### Логин существующего пользователя (смотрим mustChangePassword)
+# @name login
+POST http://localhost:3000/login
+Content-Type: application/json
+
+{
+  "email": "user1@example.com",
+  "password": "Pa$$w0rd!"
+}
+
+### Смена пароля
+# Здесь userId нужно подставить из ответа на login
+POST http://localhost:3000/change-password
+Content-Type: application/json
+
+{
+  "userId": 5,
+  "newPassword": "NewPass1234!"
+}
+
+### Логин с новым паролем (mustChangePassword должен быть false)
+POST http://localhost:3000/login
+Content-Type: application/json
+
+{
+  "email": "user1@example.com",
+  "password": "NewPass123!"
+}

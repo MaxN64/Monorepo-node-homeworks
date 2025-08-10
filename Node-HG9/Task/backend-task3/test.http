@@ -1,0 +1,107 @@
+### Health
+GET http://localhost:3000/health
+
+### Ping router
+GET http://localhost:3000/_routes_ping
+
+### Регистрация нового пользователя
+POST http://localhost:3000/register
+Content-Type: application/json
+
+{
+  "email": "user11@example.com",
+  "password": "Pa$$w0rd!"
+}
+
+### Повторная регистрация (ожидаем 409)
+POST http://localhost:3000/register
+Content-Type: application/json
+
+{
+  "email": "user10@example.com",
+  "password": "Pa$$w0rd!"
+}
+
+### Логин существующего пользователя (смотрим mustChangePassword)
+# @name login
+POST http://localhost:3000/login
+Content-Type: application/json
+
+{
+  "email": "user1@example.com",
+  "password": "Pa$$w0rd!"
+}
+
+### Смена пароля
+# Здесь userId нужно подставить из ответа на login
+POST http://localhost:3000/change-password
+Content-Type: application/json
+
+{
+  "userId": 5,
+  "newPassword": "NewPass1234!"
+}
+
+### Логин с новым паролем (mustChangePassword должен быть false)
+POST http://localhost:3000/login
+Content-Type: application/json
+
+{
+  "email": "user1@example.com",
+  "password": "NewPass123!"
+}
+
+
+### [ADDED] Регистрация пользователя для удаления
+POST http://localhost:3000/register
+Content-Type: application/json
+
+{
+  "email": "deleteme@example.com",
+  "password": "DeleteMe123!"
+}
+
+### [ADDED] Логин пользователя для удаления — получим его id
+# @name delete_login
+POST http://localhost:3000/login
+Content-Type: application/json
+
+{
+  "email": "deleteme@example.com",
+  "password": "DeleteMe123!"
+}
+
+### [ADDED] Негативный тест — попытка удалить аккаунт с неверным паролем (ожидаем 401)
+POST http://localhost:3000/delete-account
+Content-Type: application/json
+x-user-id: {{delete_login.response.body.$.user.id}}
+
+{
+  "password": "WrongPass123!"
+}
+
+### [ADDED] Негативный тест — попытка удалить аккаунт без пароля (ожидаем 400)
+POST http://localhost:3000/delete-account
+Content-Type: application/json
+x-user-id: {{delete_login.response.body.$.user.id}}
+
+{
+}
+
+### [ADDED] Позитивный тест — удаление аккаунта с корректным паролем (ожидаем ok: true)
+POST http://localhost:3000/delete-account
+Content-Type: application/json
+x-user-id: {{delete_login.response.body.$.user.id}}
+
+{
+  "password": "DeleteMe123!"
+}
+
+### [ADDED] Проверка — после удаления вход по этим данным должен провалиться (ожидаем 401)
+POST http://localhost:3000/login
+Content-Type: application/json
+
+{
+  "email": "deleteme@example.com",
+  "password": "DeleteMe123!"
+}

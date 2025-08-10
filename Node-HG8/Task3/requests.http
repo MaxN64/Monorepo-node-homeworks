@@ -1,0 +1,67 @@
+### Проверка здоровья сервера
+GET http://localhost:3000/health
+
+
+### Получить список всех книг
+GET http://localhost:3000/books
+Content-Type: application/json
+
+
+### Создать книгу (успех)
+POST http://localhost:3000/books
+Content-Type: application/json
+
+{
+  "title": "Clean Code",
+  "author": "Robert C. Martin",
+  "year": 2008
+}
+
+### Создать книгу (ошибка: отсутствует title)
+POST http://localhost:3000/books
+Content-Type: application/json
+
+{
+  "author": "No Title Author",
+  "year": 2020
+}
+
+### Создать книгу (ошибка: year не число)
+POST http://localhost:3000/books
+Content-Type: application/json
+
+{
+  "title": "Invalid Year",
+  "author": "Some Author",
+  "year": "two thousand"
+}
+
+
+### Обновить книгу (успех, id=1)
+PUT http://localhost:3000/books/1
+Content-Type: application/json
+
+{
+  "title": "Clean Coder",
+  "author": "Robert C. Martin",
+  "year": 2011
+}
+
+### Обновить книгу (ошибка: нет такой книги, id=999)
+PUT http://localhost:3000/books/999
+Content-Type: application/json
+
+{
+  "title": "Not Found Book",
+  "author": "Unknown",
+  "year": 2025
+}
+
+
+### Удалить книгу (успех, id=1)
+DELETE http://localhost:3000/books/1
+Content-Type: application/json
+
+### Удалить книгу (ошибка: нет такой книги, id=999)
+DELETE http://localhost:3000/books/999
+Content-Type: application/json

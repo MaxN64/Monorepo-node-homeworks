@@ -1,11 +1,16 @@
 
+*.swp
+*~
+*.tmp
+
+
 *.zip
-
-
 *.tar
-*.tar.gz
-*.tgz
-*.rar
-*.7z
 *.gz
-*.xz
+*.7z
+*.rar
+.vscode/
+!.vscode/settings.json         
+/.history/
+/*.code-workspace
+/node_modules/

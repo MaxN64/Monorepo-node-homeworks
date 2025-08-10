@@ -1,0 +1,33 @@
+### Health
+GET http://localhost:3000/health
+
+### Ping router
+GET http://localhost:3000/_routes_ping
+
+### Регистрация нового пользователя
+POST http://localhost:3000/register
+Content-Type: application/json
+
+{
+  "email": "user9@example.com",
+  "password": "Pa$$w0rd!"
+}
+
+### Повторная регистрация (ожидаем 409)
+POST http://localhost:3000/register
+Content-Type: application/json
+
+{
+  "email": "user1@example.com",
+  "password": "Pa$$w0rd!"
+}
+
+### Логин
+# @name login
+POST http://localhost:3000/login
+Content-Type: application/json
+
+{
+  "email": "user1@example.com",
+  "password": "Pa$$w0rd!"
+}
