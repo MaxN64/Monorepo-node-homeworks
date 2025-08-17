@@ -1,0 +1,94 @@
+@baseUrl = http://localhost:3000
+@emailRandom = user{{$randomInt}}@example.com
+@emailBad = not-an-email
+
+###
+# Healthcheck
+GET {{baseUrl}}/
+
+###
+# Логин Alice
+# @name loginAlice
+POST {{baseUrl}}/login
+Content-Type: application/json
+
+{
+  "username": "alice",
+  "password": "password123"
+}
+
+###
+# Успешное обновление email Alice (200)
+PUT {{baseUrl}}/update-email
+Content-Type: application/json
+Authorization: Bearer {{loginAlice.response.body.token}}
+
+{
+  "email": "{{emailRandom}}"
+}
+
+###
+# Удаление аккаунта Alice (200)
+DELETE {{baseUrl}}/delete-account
+Authorization: Bearer {{loginAlice.response.body.token}}
+
+###
+# Повторное удаление Alice тем же токеном (ожидаем 404, т.к. её уже удалили)
+DELETE {{baseUrl}}/delete-account
+Authorization: Bearer {{loginAlice.response.body.token}}
+
+###
+# Попытка обновить email после удаления Alice (ожидаем 404)
+PUT {{baseUrl}}/update-email
+Content-Type: application/json
+Authorization: Bearer {{loginAlice.response.body.token}}
+
+{
+  "email": "{{emailRandom}}"
+}
+
+###
+# Неверный формат email (ожидаем 400) — перед удалением или для другого пользователя
+# Для примера используем токен Bob (ниже получим)
+# @name loginBob
+POST {{baseUrl}}/login
+Content-Type: application/json
+
+{
+  "username": "bob",
+  "password": "qwerty"
+}
+
+###
+# Неверный формат email у Bob (400)
+PUT {{baseUrl}}/update-email
+Content-Type: application/json
+Authorization: Bearer {{loginBob.response.body.token}}
+
+{
+  "email": "{{emailBad}}"
+}
+
+###
+# Успешное обновление email Bob (200)
+PUT {{baseUrl}}/update-email
+Content-Type: application/json
+Authorization: Bearer {{loginBob.response.body.token}}
+
+{
+  "email": "{{emailRandom}}"
+}
+
+###
+# Удаление аккаунта Bob (200)
+DELETE {{baseUrl}}/delete-account
+Authorization: Bearer {{loginBob.response.body.token}}
+
+###
+# Удаление без токена (401)
+DELETE {{baseUrl}}/delete-account
+
+###
+# Удаление с битым токеном (403)
+DELETE {{baseUrl}}/delete-account
+Authorization: Bearer invalid.token.here

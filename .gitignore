@@ -13,4 +13,5 @@
 !.vscode/settings.json         
 /.history/
 /*.code-workspace
-/node_modules/
+**/node_modules/
+Task3/

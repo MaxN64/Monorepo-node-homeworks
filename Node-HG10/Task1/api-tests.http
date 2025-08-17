@@ -1,0 +1,98 @@
+@baseUrl = http://localhost:3000
+
+@emailRandom = user{{$randomInt}}@example.com
+@emailBad = not-an-email
+
+###
+# Healthcheck
+GET {{baseUrl}}/
+
+###
+# Успешный логин Alice — получаем JWT
+# @name loginAlice
+POST {{baseUrl}}/login
+Content-Type: application/json
+
+{
+  "username": "alice",
+  "password": "password123"
+}
+
+###
+# Успешное обновление email Alice (ожидаем 200)
+PUT {{baseUrl}}/update-email
+Content-Type: application/json
+Authorization: Bearer {{loginAlice.response.body.token}}
+
+{
+  "email": "{{emailRandom}}"
+}
+
+###
+# Неверный формат email (ожидаем 400)
+PUT {{baseUrl}}/update-email
+Content-Type: application/json
+Authorization: Bearer {{loginAlice.response.body.token}}
+
+{
+  "email": "{{emailBad}}"
+}
+
+###
+# Пропущен email в теле запроса (ожидаем 400)
+PUT {{baseUrl}}/update-email
+Content-Type: application/json
+Authorization: Bearer {{loginAlice.response.body.token}}
+
+{
+}
+
+###
+# Обновление email без токена (ожидаем 401)
+PUT {{baseUrl}}/update-email
+Content-Type: application/json
+
+{
+  "email": "{{emailRandom}}"
+}
+
+###
+# Обновление email с битым токеном (ожидаем 403)
+PUT {{baseUrl}}/update-email
+Content-Type: application/json
+Authorization: Bearer invalid.token.here
+
+{
+  "email": "{{emailRandom}}"
+}
+
+###
+# Неверный логин/пароль (ожидаем 401)
+POST {{baseUrl}}/login
+Content-Type: application/json
+
+{
+  "username": "alice",
+  "password": "wrong-password"
+}
+
+###
+# Успешный логин Bob — альтернативный пользователь
+# @name loginBob
+POST {{baseUrl}}/login
+Content-Type: application/json
+
+{
+  "username": "bob",
+  "password": "qwerty"
+}
+
+###
+# Успешное обновление email Bob (ожидаем 200)
+PUT {{baseUrl}}/update-email
+Content-Type: application/json
+Authorization: Bearer {{loginBob.response.body.token}}
+
+{
+  "email": "{{emailRandom}}"
+}

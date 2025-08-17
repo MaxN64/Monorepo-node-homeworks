@@ -1,0 +1,57 @@
+@baseUrl = http://localhost:3000
+@email……
+@emailRandom = user{{$randomInt}}@example.com
+
+###
+GET {{baseUrl}}/
+
+###
+# @name loginAlice
+POST {{baseUrl}}/login
+Content-Type: application/json
+
+{
+  "username": "alice",
+  "password": "password123"
+}
+
+###
+# @name refreshAlice
+POST {{baseUrl}}/refresh-token
+Authorization: Bearer {{loginAlice.response.body.token}}
+
+###
+# Используем НОВЫЙ токен для защищённого запроса (ожидаем 200)
+PUT {{baseUrl}}/update-email
+Content-Type: application/json
+Authorization: Bearer {{refreshAlice.response.body.token}}
+
+{
+  "email": "{{emailRandom}}"
+}
+
+###
+# @name loginBob
+POST {{baseUrl}}/login
+Content-Type: application/json
+
+{
+  "username": "bob",
+  "password": "qwerty"
+}
+
+###
+# @name refreshBob
+POST {{baseUrl}}/refresh-token
+Authorization: Bearer {{loginBob.response.body.token}}
+
+###
+# Проверка нового токена Боба (ожидаем 200 или 403, если не админ)
+PUT {{baseUrl}}/update-role
+Content-Type: application/json
+Authorization: Bearer {{refreshBob.response.body.token}}
+
+{
+  "userId": 1,
+  "role": "user"
+}
