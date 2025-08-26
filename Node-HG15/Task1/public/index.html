@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="ru">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Чат с галочками (доставлено/прочитано)</title>
+    <style>
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        padding: 0;
+        min-height: 100vh;
+        display: grid;
+        place-items: center;
+        background: #0f172a;
+        color: #e5e7eb;
+        font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial,
+          sans-serif;
+      }
+      .card {
+        width: min(720px, 92vw);
+        background: #111827;
+        border: 1px solid #1f2937;
+        border-radius: 16px;
+        padding: 16px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
+      }
+      h1 {
+        margin: 0 0 12px;
+        font-size: 20px;
+        font-weight: 700;
+      }
+      #messages {
+        list-style: none;
+        margin: 0;
+        padding: 12px;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        max-height: 56vh;
+        overflow-y: auto;
+        border: 1px dashed #374151;
+        border-radius: 12px;
+        background: #0b1220;
+      }
+      .msg {
+        max-width: 85%;
+        padding: 10px 12px;
+        border-radius: 12px;
+        border: 1px solid #1f2937;
+        background: #0f172a;
+        word-break: break-word;
+        font-size: 14px;
+        line-height: 1.4;
+        position: relative;
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+      }
+      .msg.me {
+        align-self: flex-end;
+        background: #1f2937;
+      }
+      .msg.user {
+        align-self: flex-start;
+      }
+      .status {
+        display: flex;
+        gap: 4px;
+        align-items: center;
+        font-size: 12px;
+        opacity: 0.9;
+        align-self: flex-end;
+      }
+      /* Галочки */
+      .check {
+        font-size: 12px;
+        line-height: 1;
+      }
+      .delivered .check {
+        color: #9ca3af;
+      }
+      .read .check {
+        color: #60a5fa;
+      }
+      .status.read .double::after {
+        content: "✓✓";
+      }
+      .status.delivered .single::after {
+        content: "✓";
+      }
+      form {
+        margin-top: 12px;
+        display: grid;
+        grid-template-columns: 1fr auto;
+        gap: 8px;
+      }
+      #text {
+        padding: 10px 12px;
+        border-radius: 10px;
+        border: 1px solid #374151;
+        background: #0f172a;
+        color: #e5e7eb;
+        outline: none;
+      }
+      button {
+        padding: 10px 16px;
+        border-radius: 10px;
+        border: 1px solid #374151;
+        background: #1f2937;
+        color: #e5e7eb;
+        font-weight: 600;
+        cursor: pointer;
+      }
+      button:hover {
+        filter: brightness(1.1);
+      }
+    </style>
+  </head>
+  <body>
+    <main class="card">
+      <h1>Чат</h1>
+
+      <ul id="messages"></ul>
+
+      <form id="form">
+        <input
+          id="text"
+          type="text"
+          placeholder="Введите сообщение..."
+          autocomplete="off"
+        />
+        <button type="submit">Отправить</button>
+      </form>
+    </main>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+      const uid = () =>
+        crypto && crypto.randomUUID
+          ? crypto.randomUUID()
+          : Date.now().toString(36) + Math.random().toString(36).slice(2);
+
+      const socket = io();
+      const $messages = document.getElementById("messages");
+      const $form = document.getElementById("form");
+      const $text = document.getElementById("text");
+
+      const byServerId = new Map();
+      const byClientId = new Map();
+      const readSent = new Set();
+
+      function createMessageEl({ text, type, clientId = null, id = null }) {
+        const li = document.createElement("li");
+        li.className = `msg ${type}`;
+        if (clientId) li.dataset.clientId = clientId;
+        if (id) li.dataset.id = id;
+
+        const body = document.createElement("div");
+        body.textContent = text;
+        li.appendChild(body);
+
+        const status = document.createElement("div");
+        status.className = "status";
+        const single = document.createElement("span");
+        single.className = "check single";
+        const dbl = document.createElement("span");
+        dbl.className = "check double";
+        status.appendChild(single);
+        status.appendChild(dbl);
+
+        if (type === "me") {
+          li.appendChild(status);
+        }
+
+        $messages.appendChild(li);
+        $messages.scrollTop = $messages.scrollHeight;
+        return li;
+      }
+
+      function setDelivered($el) {
+        const $st = $el.querySelector(".status");
+        if (!$st) return;
+        $st.classList.remove("read");
+        $st.classList.add("delivered");
+      }
+      function setRead($el) {
+        const $st = $el.querySelector(".status");
+        if (!$st) return;
+        $st.classList.remove("delivered");
+        $st.classList.add("read");
+      }
+
+      function renderIncomingMessage(msg) {
+        const { id, clientId, text, from } = msg;
+        const isMe = from === socket.id;
+
+        let el = null;
+
+        if (isMe) {
+          if (clientId && byClientId.has(clientId)) {
+            el = byClientId.get(clientId);
+            el.dataset.id = id;
+            byServerId.set(id, el);
+          } else {
+            el = createMessageEl({ text, type: "me", id, clientId });
+            byServerId.set(id, el);
+            if (clientId) byClientId.set(clientId, el);
+          }
+        } else {
+          el = createMessageEl({ text, type: "user", id });
+
+          if (!readSent.has(id)) {
+            socket.emit("chat:read", { id });
+            readSent.add(id);
+          }
+        }
+      }
+
+      socket.on("connect", () => {});
+
+      socket.on("chat:message", (msg) => {
+        renderIncomingMessage(msg);
+      });
+
+      socket.on("chat:ack", ({ id, clientId }) => {
+        let el = null;
+
+        if (clientId && byClientId.has(clientId)) {
+          el = byClientId.get(clientId);
+          el.dataset.id = id;
+          byServerId.set(id, el);
+        } else if (id && byServerId.has(id)) {
+          el = byServerId.get(id);
+        }
+
+        if (el) setDelivered(el);
+      });
+
+      socket.on("chat:read", ({ id }) => {
+        const el = byServerId.get(id);
+        if (el) setRead(el);
+      });
+
+      $form.addEventListener("submit", (e) => {
+        e.preventDefault();
+        const text = ($text.value || "").trim();
+        if (!text) return;
+
+        const clientId = uid();
+        const el = createMessageEl({ text, type: "me", clientId });
+        byClientId.set(clientId, el);
+
+        socket.emit("chat:message", {
+          text,
+          clientId,
+          clientTime: new Date().toISOString(),
+        });
+
+        $text.value = "";
+        $text.focus();
+      });
+    </script>
+  </body>
+</html>
