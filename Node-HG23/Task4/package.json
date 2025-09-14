@@ -1,0 +1,11 @@
+{
+  "scripts": {
+    "start": "ts-node --cwd-mode src/main.ts",
+    "build": "tsc",
+    "start:dist": "node dist/main.js"
+  },
+  "devDependencies": {
+    "ts-node": "^10.9.2",
+    "typescript": "^5.9.2"
+  }
+}
